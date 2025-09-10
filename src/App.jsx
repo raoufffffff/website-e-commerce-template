@@ -1,27 +1,11 @@
 import { Outlet } from 'react-router-dom'
-import { Menu } from 'lucide-react';
+import Header from './container/Header';
 
 function App() {
 
   return (
     <div>
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold">Inner<span className="text-amber-600">Wolf</span></div>
-          <nav className="hidden md:flex space-x-8">
-            <a href="#" className="text-gray-700 hover:text-amber-600">Home</a>
-            <a href="#" className="text-gray-700 hover:text-amber-600">Shop</a>
-            <a href="#" className="text-gray-700 hover:text-amber-600">Collections</a>
-            <a href="#" className="text-gray-700 hover:text-amber-600">About</a>
-            <a href="#" className="text-gray-700 hover:text-amber-600">Contact</a>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <Menu size={20} />
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header />
       <Outlet />
       <footer className="bg-gray-900 text-white mt-16">
         <div className="container mx-auto px-4 py-12">
