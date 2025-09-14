@@ -1,9 +1,16 @@
 import { ArrowRight, BookmarkCheck, Copy } from 'lucide-react';
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa"; import getData from '../getData'
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const Thnaks = () => {
     const { thanks, phone, main_color } = getData
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        })
+    }, [])
     return (
         <div
             className="w-[95%] mx-auto text-center  rounded-xl   pb-1.5"

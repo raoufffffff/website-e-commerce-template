@@ -1,23 +1,29 @@
 import React from "react";
 import { Phone, MessageCircle, Facebook, Instagram } from "lucide-react";
 import { FaWhatsapp, FaViber } from "react-icons/fa"; // for WhatsApp & Viber
+import getData from "../getData";
 
 const Contact = () => {
+    const { phone, main_color } = getData
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
             <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">
-                    Contact <span className="text-amber-600">Us</span>
+                    Contact <span
+                        style={{
+                            color: main_color
+                        }}
+                    >Us</span>
                 </h1>
 
                 <div className="space-y-6">
                     {/* Phone */}
                     <a
-                        href="tel:+123456789"
+                        href={`tel:${phone}`}
                         className="flex items-center gap-3 justify-center text-gray-700 hover:text-amber-600 transition-colors"
                     >
                         <Phone className="w-6 h-6" />
-                        <span className="font-medium">+1 234 567 89</span>
+                        <span className="font-medium">{phone}</span>
                     </a>
 
                     {/* WhatsApp */}
