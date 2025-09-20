@@ -1,44 +1,43 @@
 import React, { useEffect } from "react";
-import faq from '../faq.json'
 import getData from "../getData";
+
 const Faqs = () => {
-    const { main_color } = getData
+    const { main_color, faqs } = getData;
 
     useEffect(() => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        })
-    }, [])
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
+
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-            <div className="bg-white shadow-lg rounded-2xl p-8 max-w-2xl w-full">
-                <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                    Frequently Asked <span
-                        style={{
-                            color: main_color
-                        }}
-                    >Questions</span>
-                </h1>
+        <div className="min-h-screen bg-gray-50 flex flex-col px-4 py-10">
+            {/* Title */}
+            <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+                Frequently Asked{" "}
+                <span style={{ color: main_color }}>Questions</span>
+            </h1>
 
-                <div className="space-y-4">
-                    {faq.length === 0 ?
-                        <h1
-                            className="text-center text-[#333e]"
-                        >Not yet established</h1>
-
-                        : faq.map((item) => (
-                            <div
-                                key={item.id}
-                                className="border border-gray-200 rounded-lg overflow-hidden"
+            {/* FAQs */}
+            <div className="max-w-4xl mx-auto w-full space-y-6">
+                {faqs.length === 0 ? (
+                    <h2 className="text-center text-gray-500 italic">
+                        Not yet established
+                    </h2>
+                ) : (
+                    faqs.map((item) => (
+                        <div
+                            key={item.id}
+                            className="bg-white rounded-2xl shadow p-6 border border-gray-100"
+                        >
+                            <h3
+                                className="text-lg font-semibold mb-3"
+                                style={{ color: main_color }}
                             >
-                                <div className="w-full flex justify-between items-center p-4 text-left text-gray-800 font-medium bg-gray-50">
-                                    {item.question}
-                                </div>
-                                <div className="p-4 text-gray-600 border-t">{item.answer}</div>
-                            </div>
-                        ))}
-                </div>
+                                {item.question}
+                            </h3>
+                            <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

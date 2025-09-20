@@ -15,17 +15,16 @@ const Thnaks = () => {
         <div
             className="w-[95%] mx-auto text-center  rounded-xl   pb-1.5"
         >
-
             <div
                 className="border-t px-3 flex flex-col justify-center items-center border-gray-200 py-2"
             >
                 {thanks.img && <BookmarkCheck
-                    className="text-green-500 size-18 mt-10" />}
+                    className="text-green-500 size-22 mt-10" />}
                 {thanks.title && <h1
-                    className="text-lg md:text-3xl font-bold text-gray-800 mt-4 mb-2"
+                    className="text-2xl md:text-3xl font-bold text-gray-800 mt-4 mb-2"
                 >{thanks.titleText}</h1>}
                 {thanks.about && <p
-                    className="text-xs md:text-sm text-gray-600 mt-1 md:mt-2 "
+                    className=" md:text-lg text-gray-600 mt-1 md:mt-2 "
                 >{thanks.aboutText}</p>}
                 <div
                     className={`mt-5 mb-2 w-10/12 ${(thanks.phone || thanks.homebutton) && "border-y border-gray-200"} pt-4 pb-6  flex flex-col justify-center items-center`}

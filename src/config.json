@@ -1,14 +1,14 @@
 {
     "id": "6858ae003029ceb27f48115b",
     "logo": "https://i.ibb.co/k2GBrQ97/Photography-Icons-in-Blue-removebg-preview.png",
-    "store_name": "rouf soft",
+    "store_name": "",
     "main_color": "#0066ff",
-    "phone": "0776966468",
+    "phone": "",
     "repoName": "",
-    "facebook": "https://www.facebook.com/",
-    "instagram": "https://www.instagram.com/",
-    "tiktok": "https://www.tiktok.com/",
-    "email": "raouf.hamoudi.r@gmail.com",
+    "facebook": "",
+    "instagram": "",
+    "tiktok": "",
+    "email": "",
     "tiktokP": "",
     "FacebookP": "",
     "header": {
@@ -27,5 +27,10 @@
         "media": true,
         "titleText": "Thank you for your order!",
         "aboutText": "We will contact you soon. Have a nice day."
-    }
+    },
+    "language": "fr",
+    "EnableBerue": false,
+    "whatsapp": "",
+    "viber": "",
+    "snapchat": ""
 }

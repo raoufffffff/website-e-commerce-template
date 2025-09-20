@@ -61,7 +61,7 @@ const Header = () => {
                     className='flex  items-center'
                 >
                     {header.logo && <img
-                        className='h-7 w-7 mr-1'
+                        className='h-12 w-12 mr-1'
                         src={logo}
                     />}
                     {header.name && <div
@@ -73,10 +73,22 @@ const Header = () => {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex ml-auto  space-x-8">
-                    <Link to={'/'} className="text-gray-700 flex justify-center text-center  transition-colors">Home</Link>
-                    <Link to={'/faqs'}
+                    <Link
+                        style={{
+                            color: header.namecolor
+                        }}
+                        to={'/'} className="text-gray-700 flex justify-center text-center  transition-colors">Home</Link>
+                    <Link
+                        style={{
+                            color: header.namecolor
+                        }}
+                        to={'/faqs'}
                         className="text-gray-700 flex justify-center text-center  transition-colors">FAQs</Link>
-                    <Link to={'/Contact'} className="text-gray-700 flex justify-center text-center  transition-colors">Contact</Link>
+                    <Link
+                        style={{
+                            color: header.namecolor
+                        }}
+                        to={'/Contact'} className="text-gray-700 flex justify-center text-center  transition-colors">Contact</Link>
                 </nav>
 
                 {/* Mobile Menu Button */}

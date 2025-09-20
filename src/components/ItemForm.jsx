@@ -6,7 +6,7 @@ import getData from '../getData';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const ItemForm = ({ product }) => {
+const ItemForm = ({ product, buy }) => {
     const navigation = useNavigate()
 
     // ✅ Ensure we call getData (if it's a function)
@@ -67,6 +67,7 @@ const ItemForm = ({ product }) => {
         e.preventDefault();
         try {
             await axios.post(`https://true-fit-dz-api.vercel.app/order`, formData);
+            buy()
             navigation('/thanks');
         } catch (error) {
             console.error(error);
