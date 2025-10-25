@@ -4,7 +4,7 @@ import { FaWhatsapp, FaViber } from "react-icons/fa"; // for WhatsApp & Viber
 import getData from "../getData";
 
 const Contact = () => {
-    const { phone, main_color } = getData
+    const { phone, main_color, facebook, instgarm, tiktok } = getData
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
             <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center">
@@ -53,21 +53,21 @@ const Contact = () => {
                         className='flex gap-5 justify-center'
                     >
                         <a
-                            href='#'>
+                            href={tiktok}>
 
                             <img
                                 className='w-10 h-10 rounded-full'
                                 src='https://f003.backblazeb2.com/file/flex-storage/3iCF2TDOxp3bPyLetMWqo-1732896223843.png' />
                         </a>
                         <a
-                            href='#'>
+                            href={instgarm}>
 
                             <img
                                 className='w-10 h-10 rounded-full'
                                 src='https://f003.backblazeb2.com/file/flex-storage/8e_Q6aE3kZjg0MF80AdBl-1732896223768.png' />
                         </a>
                         <a
-                            href='#'>
+                            href={facebook}>
 
                             <img
                                 className='w-10 h-10 rounded-full'

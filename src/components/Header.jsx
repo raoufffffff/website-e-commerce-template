@@ -55,13 +55,13 @@ const Header = () => {
                 backgroundColor: header.headercolor
             }}
             className="bg-white shadow-sm sticky top-0 z-50">
-            <div className="container mx-auto px-4 py-4 flex  items-center">
+            <div className=" mx-auto px-4 py-1 flex  items-center">
                 <Link
                     to={'/'}
                     className='flex  items-center'
                 >
                     {header.logo && <img
-                        className='h-12 w-12 mr-1'
+                        className='h-20 w-20 mr-1'
                         src={logo}
                     />}
                     {header.name && <div
