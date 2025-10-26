@@ -10,17 +10,19 @@ const Faqs = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col px-4 py-10">
-            {/* Title */}
+            {/* ✅ العنوان */}
             <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                Frequently Asked{" "}
-                <span style={{ color: main_color }}>Questions</span>
+                الأسئلة
+                <span
+                    className="mx-2"
+                    style={{ color: main_color }}>الشائعة</span>
             </h1>
 
-            {/* FAQs */}
+            {/* ✅ قائمة الأسئلة */}
             <div className="max-w-4xl mx-auto w-full space-y-6">
-                {faqs.length === 0 ? (
+                {(!faqs || faqs.length === 0) ? (
                     <h2 className="text-center text-gray-500 italic">
-                        Not yet established
+                        لم يتم إضافة الأسئلة بعد
                     </h2>
                 ) : (
                     faqs.map((item) => (
@@ -34,7 +36,9 @@ const Faqs = () => {
                             >
                                 {item.question}
                             </h3>
-                            <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+                            <p className="text-gray-700 leading-relaxed">
+                                {item.answer}
+                            </p>
                         </div>
                     ))
                 )}

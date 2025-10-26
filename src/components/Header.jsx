@@ -55,7 +55,7 @@ const Header = () => {
                 backgroundColor: header.headercolor
             }}
             className="bg-white shadow-sm sticky top-0 z-50">
-            <div className=" mx-auto px-4 py-1 flex  items-center">
+            <div className=" mx-auto px-4 py-1 flex   items-center">
                 <Link
                     to={'/'}
                     className='flex  items-center'
@@ -72,27 +72,27 @@ const Header = () => {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex ml-auto  space-x-8">
+                <nav className="hidden md:flex mr-auto  space-x-8">
                     <Link
                         style={{
                             color: header.namecolor
                         }}
-                        to={'/'} className="text-gray-700 flex justify-center text-center  transition-colors">Home</Link>
+                        to={'/'} className="text-gray-700 flex justify-center text-center  transition-colors">الصفحة الرئيسية</Link>
                     <Link
                         style={{
                             color: header.namecolor
                         }}
                         to={'/faqs'}
-                        className="text-gray-700 flex justify-center text-center  transition-colors">FAQs</Link>
+                        className="text-gray-700 flex justify-center text-center  transition-colors">الأسئلة الشائعة</Link>
                     <Link
                         style={{
                             color: header.namecolor
                         }}
-                        to={'/Contact'} className="text-gray-700 flex justify-center text-center  transition-colors">Contact</Link>
+                        to={'/Contact'} className="text-gray-700 flex justify-center text-center  transition-colors">اتصل بنا</Link>
                 </nav>
 
                 {/* Mobile Menu Button */}
-                <div className="flex md:hidden items-center ml-auto space-x-4">
+                <div className="flex md:hidden items-center mr-auto space-x-4">
                     <button
                         onClick={toggleMenu}
                         className="p-2 md:hidden rounded-full hover:bg-gray-100 transition-colors"
@@ -129,21 +129,21 @@ const Header = () => {
                                 className="text-gray-700 border-b border-b-gray-300 text-center  transition-colors py-2"
                                 variants={menuItemVariants}
                             >
-                                Home
+                                الصفحة الرئيسية
                             </Link>
                             <Link
                                 to={'/faqs'}
                                 className="text-gray-700 border-b border-b-gray-300 text-center  transition-colors py-2"
                                 variants={menuItemVariants}
                             >
-                                FAQs
+                                الأسئلة الشائعة
                             </Link>
                             <Link
                                 to={'/Contact'}
                                 className="text-gray-700 text-center  transition-colors py-2"
                                 variants={menuItemVariants}
                             >
-                                Contact
+                                اتصل بنا
                             </Link>
                         </motion.nav>
                     </motion.div>

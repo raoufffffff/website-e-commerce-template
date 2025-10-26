@@ -1,40 +1,34 @@
 import { Outlet } from "react-router-dom";
 import Header from "./components/Header";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import getData from "./getData";
 import ReactPixel from "react-facebook-pixel";
-import { initTikTokPixel } from "./utility/tiktokPixel";
-
-let pixelInitialized = false;
 
 function App() {
-  const { TiktokPixel, facebookPixel } = getData;
+  const { facebookPixel } = getData;
+  const pixelInitialized = useRef(false); // ✅ أفضل من let
 
   useEffect(() => {
-    // Init TikTok Pixel if available
-    if (TiktokPixel?.id) {
-      initTikTokPixel(TiktokPixel.id);
+    // ✅ Init Facebook Pixel once
+    if (facebookPixel.id && !pixelInitialized.current) {
+      ReactPixel.init(facebookPixel.id, {}, { debug: false });
+      ReactPixel.pageView();
+      pixelInitialized.current = true;
     }
 
-    // Init Facebook Pixel once
-    if (facebookPixel.id && !pixelInitialized) {
-      ReactPixel.init(facebookPixel.id, {}, { debug: false });
-      ReactPixel.pageView(); // Track initial page view
-      pixelInitialized = true;
-    }
+    // ✅ لو تريد تفعيل TikTok Pixel أيضًا أخبرني أضيفه لك هنا
+    // if (TiktokPixel?.id) {
+    //   initTikTokPixel(TiktokPixel.id);
+    // }
+
   }, []);
 
   return (
-    <div
-
-    >
+    <div dir="rtl">
       <Header />
-      <main
-        className="min-h-[80vh]"
-      >
+      <main className="min-h-[80vh]">
         <Outlet />
       </main>
-      {/* <Footer /> */}
     </div>
   );
 }
