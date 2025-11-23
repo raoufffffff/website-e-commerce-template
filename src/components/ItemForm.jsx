@@ -9,13 +9,11 @@ import { useNavigate } from 'react-router-dom';
 const ItemForm = ({ product, buy }) => {
     const navigation = useNavigate()
 
-    // ✅ Ensure we call getData (if it's a function)
-    const { main_color, secondColor, id } = getData
+    const { main_color, secondColor, id, language } = getData
 
     const colorOptions = product.Variants?.find((v) => v.type === 'color')?.options || [];
     const sizeOptions = product.Variants?.find((v) => v.type === 'size')?.options || [];
 
-    // ✅ Initialize from first option (if available) for consistency
     const [selectedColor, setSelectedColor] = useState(colorOptions[0]?.name || '');
     const [selectedSize, setSelectedSize] = useState(sizeOptions[0]?.name || '');
     const [city, setCity] = useState([]);
@@ -33,6 +31,28 @@ const ItemForm = ({ product, buy }) => {
         item: product,
         price: product.price
     });
+
+    // --- Translation Logic ---
+    const isAr = language === "ar" ? true : false;
+    const t = {
+        color: isAr ? "اللون" : "Couleur",
+        size: isAr ? "المقاس" : "Taille",
+        header: isAr ? "أكمل طلبك" : "Commander maintenant",
+        nameLabel: isAr ? "الاسم الكامل" : "Nom complet",
+        namePlaceholder: isAr ? "أدخل اسمك الكامل" : "Votre nom complet",
+        phoneLabel: isAr ? "رقم الهاتف" : "Numéro de téléphone",
+        phonePlaceholder: isAr ? "أدخل رقم هاتفك" : "Votre numéro de téléphone",
+        stateLabel: isAr ? "الولاية" : "Wilaya",
+        statePlaceholder: isAr ? "اختر الولاية" : "Sélectionnez une wilaya",
+        cityLabel: isAr ? "البلدية" : "Commune",
+        cityPlaceholder: isAr ? "اختر البلدية" : "Sélectionnez une commune",
+        quantityLabel: isAr ? "الكمية" : "Quantité",
+        productPrice: isAr ? "سعر المنتج" : "Prix du produit",
+        deliveryFee: isAr ? "تكلفة التوصيل" : "Frais de livraison",
+        total: isAr ? "المجموع" : "Total",
+        submitButton: isAr ? "تأكيد الطلب" : "Confirmer la commande",
+        currency: "DA"
+    };
 
     // --- Quantity Handlers ---
     const decreaseQuantity = () => {
@@ -59,7 +79,8 @@ const ItemForm = ({ product, buy }) => {
         const state = states.find(s => s.code === value);
         const c = etat.filter(city => city.state_code === value);
         setCity(c);
-        setFormData({ ...formData, state: state?.name || '', city: '', ride: state.prix_initial }); // reset city
+        // Default ride price setup (assuming state.prix_initial exists)
+        setFormData({ ...formData, state: state?.name || '', city: '', ride: state?.prix_initial || 0 });
     };
 
     // --- Submit ---
@@ -67,7 +88,7 @@ const ItemForm = ({ product, buy }) => {
         e.preventDefault();
         try {
             await axios.post(`https://true-fit-dz-api.vercel.app/order`, formData);
-            buy()
+            if (buy) buy(); // Check if buy function exists before calling
             navigation('/thanks');
         } catch (error) {
             console.error(error);
@@ -75,17 +96,16 @@ const ItemForm = ({ product, buy }) => {
     };
 
     return (
-        <div className="md:col-span-1">
+        <div className="md:col-span-1" dir={isAr ? "rtl" : "ltr"}>
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
             <p className="text-2xl font-bold mt-2" style={{ color: main_color }}>
-                DA {product.price}
+                {t.currency} {product.price}
             </p>
             <p className="text-gray-600 mt-4">{product.ShortDescription}</p>
-
             {/* --- Color Selector --- */}
             {colorOptions.length > 0 && (
                 <div className="mt-6">
-                    <h3 className="text-sm font-medium text-gray-900">Color</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{t.color}</h3>
                     <div className="flex space-x-3 mt-2">
                         {colorOptions.map((color) => (
                             <button
@@ -103,7 +123,7 @@ const ItemForm = ({ product, buy }) => {
                                         : '1px solid #ccc',
                                 }}
                                 aria-label={color.name}
-                                title={color.name} // ✅ tooltip for better UX
+                                title={color.name}
                             />
                         ))}
                     </div>
@@ -113,7 +133,7 @@ const ItemForm = ({ product, buy }) => {
             {/* --- Size Selector --- */}
             {sizeOptions.length > 0 && (
                 <div className="mt-6">
-                    <h3 className="text-sm font-medium text-gray-900">Size</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{t.size}</h3>
                     <div className="flex space-x-3 mt-2">
                         {sizeOptions.map((size) => (
                             <button
@@ -121,7 +141,7 @@ const ItemForm = ({ product, buy }) => {
                                 type="button"
                                 onClick={() => {
                                     setSelectedSize(size.name);
-                                    setFormData({ ...formData, size: size.name }); // ✅ fixed bug
+                                    setFormData({ ...formData, size: size.name });
                                 }}
                                 className="w-10 h-10 flex items-center justify-center rounded-md border"
                                 style={{
@@ -143,16 +163,16 @@ const ItemForm = ({ product, buy }) => {
                 className="mt-8 space-y-4 bg-white p-6 rounded-lg shadow-sm"
             >
                 <h3 className="text-lg font-medium text-gray-900">
-                    Complete Your Order
+                    {t.header}
                 </h3>
 
                 {/* Name */}
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
+                        {t.nameLabel}
                     </label>
                     <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className={`absolute inset-y-0 ${isAr ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
                             <User size={18} className="text-gray-400" />
                         </div>
                         <input
@@ -162,12 +182,12 @@ const ItemForm = ({ product, buy }) => {
                             value={formData.name}
                             onChange={handleInputChange}
                             required
-                            className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none"
+                            className={`w-full rounded-md border border-gray-300 py-2 ${isAr ? 'pr-10 pl-3' : 'pl-10 pr-3'} focus:outline-none`}
                             style={{
                                 outlineColor: main_color,
                                 boxShadow: `0 0 0 2px ${secondColor}`,
                             }}
-                            placeholder="Your full name"
+                            placeholder={t.namePlaceholder}
                         />
                     </div>
                 </div>
@@ -175,10 +195,10 @@ const ItemForm = ({ product, buy }) => {
                 {/* Phone */}
                 <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
+                        {t.phoneLabel}
                     </label>
                     <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div className={`absolute inset-y-0 ${isAr ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
                             <Phone size={18} className="text-gray-400" />
                         </div>
                         <input
@@ -188,12 +208,12 @@ const ItemForm = ({ product, buy }) => {
                             value={formData.phone}
                             onChange={handleInputChange}
                             required
-                            className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none"
+                            className={`w-full rounded-md border border-gray-300 py-2 ${isAr ? 'pr-10 pl-3' : 'pl-10 pr-3'} focus:outline-none`}
                             style={{
                                 outlineColor: main_color,
                                 boxShadow: `0 0 0 2px ${secondColor}`,
                             }}
-                            placeholder="Your phone number"
+                            placeholder={t.phonePlaceholder}
                         />
                     </div>
                 </div>
@@ -202,7 +222,7 @@ const ItemForm = ({ product, buy }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                            State
+                            {t.stateLabel}
                         </label>
                         <select
                             id="state"
@@ -216,7 +236,7 @@ const ItemForm = ({ product, buy }) => {
                                 boxShadow: `0 0 0 2px ${secondColor}`,
                             }}
                         >
-                            <option value="">Select a state</option>
+                            <option value="">{t.statePlaceholder}</option>
                             {states.map((state) => (
                                 <option key={state.code} value={state.code}>
                                     {state.name}
@@ -227,7 +247,7 @@ const ItemForm = ({ product, buy }) => {
 
                     <div>
                         <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-                            City
+                            {t.cityLabel}
                         </label>
                         <select
                             id="city"
@@ -242,7 +262,7 @@ const ItemForm = ({ product, buy }) => {
                                 boxShadow: `0 0 0 2px ${secondColor}`,
                             }}
                         >
-                            <option value="">Select a city</option>
+                            <option value="">{t.cityPlaceholder}</option>
                             {formData.state &&
                                 city.map((o, idx) => (
                                     <option key={idx} value={o.name}>
@@ -256,13 +276,13 @@ const ItemForm = ({ product, buy }) => {
                 {/* Quantity */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quantity
+                        {t.quantityLabel}
                     </label>
                     <div className="flex items-center">
                         <button
                             type="button"
                             onClick={decreaseQuantity}
-                            className="w-10 h-10 flex items-center justify-center rounded-l-md border border-gray-300 bg-gray-100"
+                            className={`w-10 h-10 flex items-center justify-center border border-gray-300 bg-gray-100 ${isAr ? 'rounded-r-md' : 'rounded-l-md'}`}
                         >
                             -
                         </button>
@@ -272,40 +292,39 @@ const ItemForm = ({ product, buy }) => {
                         <button
                             type="button"
                             onClick={increaseQuantity}
-                            className="w-10 h-10 flex items-center justify-center rounded-r-md border border-gray-300 bg-gray-100"
+                            className={`w-10 h-10 flex items-center justify-center border border-gray-300 bg-gray-100 ${isAr ? 'rounded-l-md' : 'rounded-r-md'}`}
                         >
                             +
                         </button>
                     </div>
                 </div>
+
+                {/* Price Summary */}
                 <div className="mt-4 space-y-1 text-sm text-gray-700">
                     <div className="flex justify-between">
-                        <span>Product Price:</span>
-                        <span>DA {product.price}</span>
+                        <span>{t.productPrice}:</span>
+                        <span>{t.currency} {product.price}</span>
                     </div>
                     <div className="flex justify-between">
-                        <span>Delivery Fee:</span>
-                        <span>DA {formData.ride}</span>
+                        <span>{t.deliveryFee}:</span>
+                        <span>{t.currency} {formData.ride}</span>
                     </div>
                     <div className="flex justify-between font-semibold text-gray-900">
-                        <span>Total:</span>
-                        <span
-                            style={{
-                                color: main_color
-                            }}
-                        >
-                            DA {formData.quantity * product.price + (formData.ride || 0)}
+                        <span>{t.total}:</span>
+                        <span style={{ color: main_color }}>
+                            {t.currency} {formData.quantity * product.price + (formData.ride || 0)}
                         </span>
                     </div>
                 </div>
+
                 {/* Submit */}
                 <button
                     type="submit"
                     className="mt-4 w-full text-white py-3 px-4 rounded-md flex items-center justify-center"
                     style={{ backgroundColor: main_color }}
                 >
-                    <ShoppingCart size={20} className="mr-2" />
-                    Complete Order
+                    <ShoppingCart size={20} className={isAr ? "ml-2" : "mr-2"} />
+                    {t.submitButton}
                 </button>
             </form>
         </div>

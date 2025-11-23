@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import item from "../item.json";
 import states from "../constans/states.json";
-import citie from "../constans/etat";
+import citie from "../constans/etat"; // Keeping your import name 'citie'
 
 import {
     User,
@@ -22,10 +22,37 @@ import getData from "../getData";
 
 export default function ProductPage() {
     const { id } = useParams();
-    const product = item.find((p) => p._id === id);
     const navigate = useNavigate();
 
-    const { main_color, secondColor, id: _id } = getData;
+    // 🟢 Safety Check: Handle case where product isn't found
+    const product = item.find((p) => String(p._id) === String(id));
+
+    // 🟢 Destructure language for translation
+    const { main_color, secondColor, id: _id, language } = getData;
+    const isAr = language === "ar";
+
+    // --- Translations ---
+    const t = {
+        currency: "DA",
+        orderNow: isAr ? "اطلب الآن" : "Commander maintenant",
+        color: isAr ? "اللون" : "Couleur",
+        size: isAr ? "المقاس" : "Taille",
+        completeOrder: isAr ? "أكمل طلبك" : "Compléter votre commande",
+        namePlaceholder: isAr ? "الاسم الكامل" : "Nom complet",
+        phonePlaceholder: isAr ? "رقم الهاتف" : "Numéro de téléphone",
+        selectState: isAr ? "اختر الولاية" : "Sélectionnez une wilaya",
+        selectCity: isAr ? "اختر المدينة" : "Sélectionnez une commune",
+        homeDelivery: isAr ? "توصيل للمنزل" : "Livraison à domicile",
+        officeDelivery: isAr ? "توصيل للمكتب (Stop desk)" : "Livraison au bureau (Stop desk)",
+        quantity: isAr ? "الكمية" : "Quantité",
+        price: isAr ? "السعر" : "Prix",
+        delivery: isAr ? "التوصيل" : "Livraison",
+        total: isAr ? "المجموع" : "Total",
+        submitting: isAr ? "جاري إرسال الطلب..." : "Envoi en cours...",
+        confirm: isAr ? "تأكيد الطلب" : "Confirmer la commande",
+        alertState: isAr ? "يرجى اختيار الولاية" : "Veuillez sélectionner une wilaya",
+        alertCity: isAr ? "يرجى اختيار المدينة" : "Veuillez sélectionner une commune",
+    };
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showButton, setShowButton] = useState(true);
@@ -33,8 +60,9 @@ export default function ProductPage() {
     const formRef = useRef(null);
     const inputFocusRef = useRef(null);
 
-    // 🟢 Initialize Facebook Pixel Once
+    // 🟢 Initialize Facebook Pixel
     useEffect(() => {
+        // Make sure to use your actual Pixel ID here
         ReactPixel.init("YOUR_PIXEL_ID");
     }, []);
 
@@ -52,7 +80,7 @@ export default function ProductPage() {
     // 🟢 Visit Tracking
     const hasVisited = useRef(false);
     useEffect(() => {
-        if (hasVisited.current) return;
+        if (hasVisited.current || !product) return;
         hasVisited.current = true;
 
         const visit = async () => {
@@ -73,7 +101,7 @@ export default function ProductPage() {
 
         window.scrollTo({ top: 0, behavior: "smooth" });
         visit();
-    }, []);
+    }, [product, _id]);
 
     // 🟢 Variants
     const colorOptions = product?.Variants?.find((v) => v.type === "color")?.options || [];
@@ -84,7 +112,6 @@ export default function ProductPage() {
 
     // 🟢 Form State
     const [availableCities, setAvailableCities] = useState([]);
-
     const [ride, setRide] = useState({ home: 0, office: 0 });
 
     const [formData, setFormData] = useState({
@@ -110,16 +137,17 @@ export default function ProductPage() {
     // 🟢 Handle Inputs
     const handleInputChange = (e) => {
         let { name, value } = e.target;
-
         if (name === "home") value = value === "true";
-
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // 🟢 Robust State Change Handler
     const handleStateChange = (e) => {
         const stateCode = e.target.value;
-        const stateObj = states.find((s) => s.code === stateCode);
-        const cities = citie.filter((c) => c.state_code === stateCode);
+
+        // Force string comparison for safety
+        const stateObj = states.find((s) => String(s.code) === String(stateCode));
+        const cities = citie.filter((c) => String(c.state_code) === String(stateCode));
 
         setAvailableCities(cities);
 
@@ -143,19 +171,21 @@ export default function ProductPage() {
         setFormData((p) => ({ ...p, quantity: Math.max(1, p.quantity - 1) }));
 
     // 🟢 Calculations
+    // Ensure product exists before calculating to avoid errors
+    const productPrice = product?.price || 0;
     const deliveryCost = formData.home ? ride.home : ride.office;
 
     const totalPrice = useMemo(
-        () => product.price * formData.quantity + deliveryCost,
-        [formData, deliveryCost]
+        () => productPrice * formData.quantity + deliveryCost,
+        [formData.quantity, deliveryCost, productPrice]
     );
 
     // 🟢 Submit
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.state) return alert("يرجى اختيار الولاية");
-        if (!formData.city) return alert("يرجى اختيار المدينة");
+        if (!formData.state) return alert(t.alertState);
+        if (!formData.city) return alert(t.alertCity);
 
         setIsSubmitting(true);
 
@@ -171,7 +201,7 @@ export default function ProductPage() {
             ReactPixel.track("Purchase", {
                 value: product.price * formData.quantity,
                 currency: "DZD",
-                content_ids: [product.id],
+                content_ids: [product._id], // Changed to _id to match your param
                 content_type: "product",
                 quantity: formData.quantity,
             });
@@ -184,8 +214,11 @@ export default function ProductPage() {
         setIsSubmitting(false);
     };
 
+    // If product is not found, return loading or 404
+    if (!product) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+
     return (
-        <div className="min-h-screen bg-gray-50 font-inter">
+        <div className="min-h-screen bg-gray-50 font-inter" dir={isAr ? "rtl" : "ltr"}>
 
             {/* 🟢 Mobile Order Button */}
             {showButton && (
@@ -198,7 +231,7 @@ export default function ProductPage() {
                         className="w-10/12 py-3 px-4 rounded-2xl text-white font-medium shadow-md"
                         style={{ background: main_color }}
                     >
-                        اطلب الآن
+                        {t.orderNow}
                     </button>
                 </div>
             )}
@@ -219,7 +252,7 @@ export default function ProductPage() {
                             </h1>
 
                             <p className="text-3xl font-bold mt-2" style={{ color: main_color }}>
-                                دج {product.price.toLocaleString()}
+                                {t.currency} {product.price.toLocaleString()}
                             </p>
 
                             <p className="text-gray-600 mt-4 leading-relaxed">
@@ -231,7 +264,7 @@ export default function ProductPage() {
                         {colorOptions.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-medium text-gray-900">
-                                    اللون: <span className="font-semibold">{selectedColor}</span>
+                                    {t.color}: <span className="font-semibold">{selectedColor}</span>
                                 </h3>
 
                                 <div className="flex gap-3 mt-3">
@@ -239,13 +272,12 @@ export default function ProductPage() {
                                         <button
                                             key={c.name}
                                             onClick={() => setSelectedColor(c.name)}
-                                            className="w-8 h-8 rounded-full border"
+                                            className="w-8 h-8 rounded-full border transition-transform hover:scale-110"
                                             style={{
                                                 backgroundColor: c.color,
-                                                outline:
-                                                    selectedColor === c.name
-                                                        ? `2px solid ${main_color}`
-                                                        : "none",
+                                                outline: selectedColor === c.name
+                                                    ? `2px solid ${main_color}`
+                                                    : "none",
                                             }}
                                         />
                                     ))}
@@ -257,7 +289,7 @@ export default function ProductPage() {
                         {sizeOptions.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-medium text-gray-900">
-                                    المقاس: <span className="font-semibold">{selectedSize}</span>
+                                    {t.size}: <span className="font-semibold">{selectedSize}</span>
                                 </h3>
 
                                 <div className="flex gap-3 mt-3">
@@ -265,14 +297,11 @@ export default function ProductPage() {
                                         <button
                                             key={s.name}
                                             onClick={() => setSelectedSize(s.name)}
-                                            className="w-12 h-10 flex items-center justify-center rounded-md border text-sm font-medium"
+                                            className="w-12 h-10 flex items-center justify-center rounded-md border text-sm font-medium transition-colors"
                                             style={{
-                                                borderColor:
-                                                    selectedSize === s.name ? main_color : "#D1D5DB",
-                                                backgroundColor:
-                                                    selectedSize === s.name ? secondColor : "white",
-                                                color:
-                                                    selectedSize === s.name ? main_color : "#374151",
+                                                borderColor: selectedSize === s.name ? main_color : "#D1D5DB",
+                                                backgroundColor: selectedSize === s.name ? secondColor : "white",
+                                                color: selectedSize === s.name ? main_color : "#374151",
                                             }}
                                         >
                                             {s.name.toUpperCase()}
@@ -287,31 +316,31 @@ export default function ProductPage() {
 
                             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
 
-                                <h3 className="text-xl font-semibold mb-4">أكمل طلبك</h3>
+                                <h3 className="text-xl font-semibold mb-4">{t.completeOrder}</h3>
 
                                 {/* Name */}
                                 <div className="relative">
-                                    <User size={18} className="absolute left-3 top-3 text-gray-400" />
+                                    <User size={18} className={`absolute top-3 text-gray-400 ${isAr ? 'right-3' : 'left-3'}`} />
                                     <input
                                         ref={inputFocusRef}
                                         type="text"
                                         name="name"
                                         required
-                                        className="pl-10 w-full rounded-md border border-gray-300 py-3 px-3"
-                                        placeholder="الاسم الكامل"
+                                        className={`w-full rounded-md border border-gray-300 py-3 ${isAr ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
+                                        placeholder={t.namePlaceholder}
                                         onChange={handleInputChange}
                                     />
                                 </div>
 
                                 {/* Phone */}
                                 <div className="relative">
-                                    <Phone size={18} className="absolute left-3 top-3 text-gray-400" />
+                                    <Phone size={18} className={`absolute top-3 text-gray-400 ${isAr ? 'right-3' : 'left-3'}`} />
                                     <input
                                         type="tel"
                                         name="phone"
                                         required
-                                        className="pl-10 w-full rounded-md border border-gray-300 py-3 px-3"
-                                        placeholder="رقم الهاتف"
+                                        className={`w-full rounded-md border border-gray-300 py-3 ${isAr ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
+                                        placeholder={t.phonePlaceholder}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -320,34 +349,34 @@ export default function ProductPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                     <div className="relative">
-                                        <MapPin size={18} className="absolute left-3 top-3 text-gray-400" />
+                                        <MapPin size={18} className={`absolute top-3 text-gray-400 ${isAr ? 'right-3' : 'left-3'}`} />
                                         <select
                                             onChange={handleStateChange}
                                             required
-                                            className="pl-10 w-full rounded-md border border-gray-300 py-3 px-3"
+                                            className={`w-full rounded-md border border-gray-300 py-3 ${isAr ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
                                         >
-                                            <option value="">اختر الولاية</option>
+                                            <option value="">{t.selectState}</option>
                                             {states.map((s) => (
                                                 <option key={s.code} value={s.code}>
-                                                    {s.ar_name}
+                                                    {isAr ? s.ar_name : s.name}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
 
                                     <div className="relative">
-                                        <Building size={18} className="absolute left-3 top-3 text-gray-400" />
+                                        <Building size={18} className={`absolute top-3 text-gray-400 ${isAr ? 'right-3' : 'left-3'}`} />
                                         <select
                                             name="city"
                                             disabled={!formData.state}
                                             onChange={handleInputChange}
                                             required
-                                            className="pl-10 w-full rounded-md border border-gray-300 py-3 px-3 disabled:bg-gray-100"
+                                            className={`w-full rounded-md border border-gray-300 py-3 disabled:bg-gray-100 ${isAr ? 'pr-10 pl-3' : 'pl-10 pr-3'}`}
                                         >
-                                            <option value="">اختر المدينة</option>
+                                            <option value="">{t.selectCity}</option>
                                             {availableCities.map((c) => (
                                                 <option key={c.code} value={c.name}>
-                                                    {c.ar_name}
+                                                    {isAr ? c.ar_name : c.name}
                                                 </option>
                                             ))}
                                         </select>
@@ -362,31 +391,31 @@ export default function ProductPage() {
                                     required
                                     className="w-full rounded-md border border-gray-300 py-3 px-3"
                                 >
-                                    <option value="true">توصيل للمنزل</option>
-                                    <option value="false">توصيل للمكتب</option>
+                                    <option value="true">{t.homeDelivery}</option>
+                                    <option value="false">{t.officeDelivery}</option>
                                 </select>
 
                                 {/* Quantity */}
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">الكمية</label>
+                                    <label className="block text-sm font-medium mb-2">{t.quantity}</label>
 
                                     <div className="flex items-center">
                                         <button
                                             type="button"
                                             onClick={decreaseQuantity}
-                                            className="w-10 h-10 border rounded-l-md flex items-center justify-center"
+                                            className={`w-10 h-10 border flex items-center justify-center hover:bg-gray-100 ${isAr ? 'rounded-r-md' : 'rounded-l-md'}`}
                                         >
                                             <Minus size={16} />
                                         </button>
 
-                                        <div className="w-12 h-10 border flex items-center justify-center font-semibold">
+                                        <div className="w-12 h-10 border-t border-b flex items-center justify-center font-semibold">
                                             {formData.quantity}
                                         </div>
 
                                         <button
                                             type="button"
                                             onClick={increaseQuantity}
-                                            className="w-10 h-10 border rounded-r-md flex items-center justify-center"
+                                            className={`w-10 h-10 border flex items-center justify-center hover:bg-gray-100 ${isAr ? 'rounded-l-md' : 'rounded-r-md'}`}
                                         >
                                             <Plus size={16} />
                                         </button>
@@ -396,23 +425,23 @@ export default function ProductPage() {
                                 {/* Price Summary */}
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-sm text-gray-600">
-                                        <span>السعر:</span>
+                                        <span>{t.price}:</span>
                                         <span className="font-medium">
-                                            دج {(formData.quantity * product.price).toLocaleString()}
+                                            {t.currency} {(formData.quantity * product.price).toLocaleString()}
                                         </span>
                                     </div>
 
                                     <div className="flex justify-between text-sm text-gray-600">
-                                        <span>التوصيل:</span>
+                                        <span>{t.delivery}:</span>
                                         <span className="font-medium">
-                                            دج {deliveryCost.toLocaleString()}
+                                            {t.currency} {deliveryCost.toLocaleString()}
                                         </span>
                                     </div>
 
                                     <div className="flex justify-between text-lg font-semibold">
-                                        <span>المجموع:</span>
+                                        <span>{t.total}:</span>
                                         <span style={{ color: main_color }}>
-                                            دج {totalPrice.toLocaleString()}
+                                            {t.currency} {totalPrice.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>
@@ -425,17 +454,17 @@ export default function ProductPage() {
                                         backgroundColor: main_color,
                                         boxShadow: `0 4px 14px 0 ${secondColor}`,
                                     }}
-                                    className="w-full text-white py-3 px-4 rounded-lg flex items-center justify-center"
+                                    className="w-full text-white py-3 px-4 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <Loader2 size={20} className="animate-spin mr-2" />
-                                            جاري إرسال الطلب...
+                                            <Loader2 size={20} className={`animate-spin ${isAr ? 'ml-2' : 'mr-2'}`} />
+                                            {t.submitting}
                                         </>
                                     ) : (
                                         <>
-                                            <ShoppingCart size={20} className="mr-2" />
-                                            تأكيد الطلب
+                                            <ShoppingCart size={20} className={isAr ? 'ml-2' : 'mr-2'} />
+                                            {t.confirm}
                                         </>
                                     )}
                                 </button>

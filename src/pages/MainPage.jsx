@@ -7,7 +7,7 @@ import categories from '../categories.json'
 import CategoryCard from '../components/CategoryCard';
 import axios from 'axios';
 const MainPage = () => {
-    const { main_color, id } = getData
+    const { main_color, id, language } = getData
     const [selectedCategory, setSelectedCategory] = useState('all');
     const hasVisited = useRef(false);
 
@@ -98,7 +98,9 @@ const MainPage = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {items.map(product => (
-                            <ItemCard main_color={main_color} product={product} key={product._id} />
+                            <ItemCard
+                                language={language}
+                                main_color={main_color} product={product} key={product._id} />
                         ))}
                     </div>
                 </section>

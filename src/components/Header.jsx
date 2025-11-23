@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import getData from '../getData';
 import { Menu, X } from 'lucide-react';
+import getData from '../getData';
+
+// Create a motion-enabled Link component for animations
+const MotionLink = motion(Link);
 
 const Header = () => {
-    const { header, logo, store_name } = getData
-
+    // Assuming getData is an object
+    const { header, logo, store_name, language } = getData;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const toggleMenu = () => {
@@ -19,7 +22,8 @@ const Header = () => {
             height: 0,
             transition: {
                 duration: 0.3,
-                ease: "easeInOut"
+                ease: "easeInOut",
+                when: "afterChildren"
             }
         },
         open: {
@@ -27,88 +31,78 @@ const Header = () => {
             height: "auto",
             transition: {
                 duration: 0.3,
-                ease: "easeInOut"
+                ease: "easeInOut",
+                staggerChildren: 0.1,
+                when: "beforeChildren"
             }
         }
     };
 
     const menuItemVariants = {
-        closed: {
-            opacity: 0,
-            x: -20,
-            transition: {
-                duration: 0.2
-            }
-        },
-        open: {
-            opacity: 1,
-            x: 0,
-            transition: {
-                duration: 0.3
-            }
-        }
+        closed: { opacity: 0, x: -20, transition: { duration: 0.2 } },
+        open: { opacity: 1, x: 0, transition: { duration: 0.3 } }
     };
+
+    const headerStyle = { backgroundColor: header?.headercolor || '#fff' };
+    const nameStyle = { color: header?.namecolor || '#000' };
+    const iconStyle = { color: header?.barcolor || '#000' };
+
+    // --- Translation Helper ---
+    const isAr = language === "ar";
 
     return (
         <header
-            style={{
-                backgroundColor: header.headercolor
-            }}
-            className="bg-white shadow-sm sticky top-0 z-50">
-            <div className=" mx-auto px-4 py-1 flex   items-center">
-                <Link
-                    to={'/'}
-                    className='flex  items-center'
-                >
-                    {header.logo && <img
-                        className='h-20 w-20 mr-1'
-                        src={logo}
-                    />}
-                    {header.name && <div
-                        style={{
-                            color: header.namecolor
-                        }}
-                        className="text-2xl font-bold">{store_name}</div>}
+            style={headerStyle}
+            className="bg-white shadow-sm sticky top-0 z-50"
+        >
+            <div className="mx-auto px-4 py-1 flex items-center justify-between">
+                <Link to={'/'} className='flex items-center'>
+                    {header?.logo && (
+                        <img
+                            className='h-20 w-20 mr-1 object-contain'
+                            src={logo}
+                            alt={store_name}
+                        />
+                    )}
+                    {header?.name && (
+                        <div style={nameStyle} className="text-2xl font-bold">
+                            {store_name}
+                        </div>
+                    )}
                 </Link>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex mr-auto  space-x-8">
+                <nav className="hidden md:flex space-x-8">
                     <Link
-                        style={{
-                            color: header.namecolor
-                        }}
-                        to={'/'} className="text-gray-700 flex justify-center text-center  transition-colors">الصفحة الرئيسية</Link>
+                        style={nameStyle}
+                        to={'/'}
+                        className="text-gray-700 hover:opacity-80 transition-colors"
+                    >
+                        {isAr ? "الصفحة الرئيسية" : "Page d'accueil"}
+                    </Link>
                     <Link
-                        style={{
-                            color: header.namecolor
-                        }}
+                        style={nameStyle}
                         to={'/faqs'}
-                        className="text-gray-700 flex justify-center text-center  transition-colors">الأسئلة الشائعة</Link>
+                        className="text-gray-700 hover:opacity-80 transition-colors"
+                    >
+                        {isAr ? "الأسئلة الشائعة" : "FAQ"}
+                    </Link>
                     <Link
-                        style={{
-                            color: header.namecolor
-                        }}
-                        to={'/Contact'} className="text-gray-700 flex justify-center text-center  transition-colors">اتصل بنا</Link>
+                        style={nameStyle}
+                        to={'/Contact'}
+                        className="text-gray-700 hover:opacity-80 transition-colors"
+                    >
+                        {isAr ? "اتصل بنا" : "Contactez-nous"}
+                    </Link>
                 </nav>
 
                 {/* Mobile Menu Button */}
-                <div className="flex md:hidden items-center mr-auto space-x-4">
+                <div className="flex md:hidden items-center">
                     <button
                         onClick={toggleMenu}
-                        className="p-2 md:hidden rounded-full hover:bg-gray-100 transition-colors"
-                        aria-label="Toggle menu"
+                        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                     >
-                        {isMenuOpen ? (
-                            <X style={{
-                                color: header.barcolor
-                            }} />
-                        ) : (
-                            <Menu
-                                style={{
-                                    color: header.barcolor
-                                }}
-                            />
-                        )}
+                        {isMenuOpen ? <X style={iconStyle} /> : <Menu style={iconStyle} />}
                     </button>
                 </div>
             </div>
@@ -124,27 +118,32 @@ const Header = () => {
                         className="md:hidden bg-white border-t rounded-b-2xl border-gray-100 overflow-hidden"
                     >
                         <motion.nav className="container mx-auto px-4 py-3 flex flex-col space-y-4">
-                            <Link
+                            <MotionLink
                                 to={'/'}
-                                className="text-gray-700 border-b border-b-gray-300 text-center  transition-colors py-2"
+                                className="text-gray-700 border-b border-b-gray-300 text-center py-2"
                                 variants={menuItemVariants}
+                                onClick={() => setIsMenuOpen(false)}
                             >
-                                الصفحة الرئيسية
-                            </Link>
-                            <Link
+                                {isAr ? "الصفحة الرئيسية" : "Page d'accueil"}
+                            </MotionLink>
+
+                            <MotionLink
                                 to={'/faqs'}
-                                className="text-gray-700 border-b border-b-gray-300 text-center  transition-colors py-2"
+                                className="text-gray-700 border-b border-b-gray-300 text-center py-2"
                                 variants={menuItemVariants}
+                                onClick={() => setIsMenuOpen(false)}
                             >
-                                الأسئلة الشائعة
-                            </Link>
-                            <Link
+                                {isAr ? "الأسئلة الشائعة" : "FAQ"}
+                            </MotionLink>
+
+                            <MotionLink
                                 to={'/Contact'}
-                                className="text-gray-700 text-center  transition-colors py-2"
+                                className="text-gray-700 text-center py-2"
                                 variants={menuItemVariants}
+                                onClick={() => setIsMenuOpen(false)}
                             >
-                                اتصل بنا
-                            </Link>
+                                {isAr ? "اتصل بنا" : "Contactez-nous"}
+                            </MotionLink>
                         </motion.nav>
                     </motion.div>
                 )}
