@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import item from "../item.json";
 import states from "../constans/states.json";
-import citie from "../constans/etat"; // Keeping your import name 'citie'
+import citie from "../constans/etat";
 
 import {
     User,
@@ -12,6 +12,9 @@ import {
     Loader2,
     MapPin,
     Building,
+    CheckCircle2,
+    Gift,
+    Tag,
 } from "lucide-react";
 
 import ReactPixel from "react-facebook-pixel";
@@ -24,12 +27,15 @@ export default function ProductPage() {
     const { id } = useParams();
     const navigate = useNavigate();
 
+    // 🟢 Destructure language & pixel for translation
+    const { main_color, secondColor, id: _id, language, facebookPixel } = getData;
+    const isAr = language === "ar";
+
     // 🟢 Safety Check: Handle case where product isn't found
     const product = item.find((p) => String(p._id) === String(id));
 
-    // 🟢 Destructure language for translation
-    const { main_color, secondColor, id: _id, language } = getData;
-    const isAr = language === "ar";
+    // 🟢 Handle Offers (Check both 'Offers' and 'order' in case JSON name changes)
+    const offers = product?.Offers || product?.order || [];
 
     // --- Translations ---
     const t = {
@@ -52,6 +58,11 @@ export default function ProductPage() {
         confirm: isAr ? "تأكيد الطلب" : "Confirmer la commande",
         alertState: isAr ? "يرجى اختيار الولاية" : "Veuillez sélectionner une wilaya",
         alertCity: isAr ? "يرجى اختيار المدينة" : "Veuillez sélectionner une commune",
+        specialOfferTitle: isAr ? "عرض خاص" : "Offre Spéciale",
+        buy: isAr ? "اشتري" : "Achetez",
+        for: isAr ? "بسعر" : "pour",
+        freeShipping: isAr ? "توصيل مجاني" : "Livraison Gratuite",
+        bestValue: isAr ? "أفضل قيمة" : "Meilleure valeur"
     };
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,9 +73,9 @@ export default function ProductPage() {
 
     // 🟢 Initialize Facebook Pixel
     useEffect(() => {
-        // Make sure to use your actual Pixel ID here
-        ReactPixel.init("YOUR_PIXEL_ID");
-    }, []);
+        if (!facebookPixel?.id) return;
+        ReactPixel.init(facebookPixel.id, {}, { autoConfig: true, debug: false });
+    }, [facebookPixel]);
 
     // 🟢 Hide "Order Now" Button When Form Visible
     useEffect(() => {
@@ -123,7 +134,35 @@ export default function ProductPage() {
         quantity: 1,
         color: selectedColor,
         size: selectedSize,
+        offer: false,
+        freeDelivery: false
     });
+
+    const [selectedOffer, setSelectedOffer] = useState(null);
+
+    // 🟢 Select Offer Logic
+    const selectOffer = (offer) => {
+        // If clicking the same offer, toggle it off
+        if (selectedOffer?.id === offer.id) {
+            setSelectedOffer(null);
+            setFormData((prev) => ({
+                ...prev,
+                quantity: 1,
+                offer: false,
+                freeDelivery: false
+            }));
+            return;
+        }
+
+        // Apply new offer
+        setSelectedOffer(offer);
+        setFormData((prev) => ({
+            ...prev,
+            quantity: Number(offer.Quantity),
+            offer: true,
+            freeDelivery: offer.freedelevry // Make sure JSON key is correct (freedelevry vs freeDelivery)
+        }));
+    };
 
     // 🟢 Sync Variants
     useEffect(() => {
@@ -141,11 +180,9 @@ export default function ProductPage() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // 🟢 Robust State Change Handler
+    // 🟢 Handle State Change
     const handleStateChange = (e) => {
         const stateCode = e.target.value;
-
-        // Force string comparison for safety
         const stateObj = states.find((s) => String(s.code) === String(stateCode));
         const cities = citie.filter((c) => String(c.state_code) === String(stateCode));
 
@@ -163,22 +200,32 @@ export default function ProductPage() {
         });
     };
 
-    // 🟢 Quantity
-    const increaseQuantity = () =>
-        setFormData((p) => ({ ...p, quantity: p.quantity + 1 }));
+    // 🟢 Quantity Controls
+    const increaseQuantity = () => {
+        setFormData((p) => ({ ...p, quantity: p.quantity + 1, offer: false, freeDelivery: false }));
+        setSelectedOffer(null); // Reset offer if user manually changes quantity
+    };
 
-    const decreaseQuantity = () =>
-        setFormData((p) => ({ ...p, quantity: Math.max(1, p.quantity - 1) }));
+    const decreaseQuantity = () => {
+        setFormData((p) => ({ ...p, quantity: Math.max(1, p.quantity - 1), offer: false, freeDelivery: false }));
+        setSelectedOffer(null); // Reset offer if user manually changes quantity
+    };
 
     // 🟢 Calculations
-    // Ensure product exists before calculating to avoid errors
     const productPrice = product?.price || 0;
     const deliveryCost = formData.home ? ride.home : ride.office;
 
-    const totalPrice = useMemo(
-        () => productPrice * formData.quantity + deliveryCost,
-        [formData.quantity, deliveryCost, productPrice]
-    );
+    const totalPrice = useMemo(() => {
+        let itemTotal;
+        let deliveryTotal = formData.freeDelivery ? 0 : deliveryCost;
+
+        if (selectedOffer) {
+            itemTotal = Number(selectedOffer.price);
+        } else {
+            itemTotal = formData.quantity * productPrice;
+        }
+        return itemTotal + deliveryTotal;
+    }, [formData.quantity, formData.freeDelivery, deliveryCost, productPrice, selectedOffer]);
 
     // 🟢 Submit
     const handleSubmit = async (e) => {
@@ -195,13 +242,15 @@ export default function ProductPage() {
                 item: product,
                 userId: product.userId,
                 price: product.price,
-                ride: deliveryCost
+                // 🛑 CRITICAL FIX: Check formData.freeDelivery, NOT selectedOffer.freeDelivery
+                ride: formData.freeDelivery ? 0 : deliveryCost,
+                total: totalPrice,
             });
 
             ReactPixel.track("Purchase", {
-                value: product.price * formData.quantity,
+                value: totalPrice,
                 currency: "DZD",
-                content_ids: [product._id], // Changed to _id to match your param
+                content_ids: [product._id],
                 content_type: "product",
                 quantity: formData.quantity,
             });
@@ -214,7 +263,6 @@ export default function ProductPage() {
         setIsSubmitting(false);
     };
 
-    // If product is not found, return loading or 404
     if (!product) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
     return (
@@ -240,7 +288,7 @@ export default function ProductPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
                     {/* 🟢 Images */}
-                    <ItemImages product={product} main_color={main_color} />
+                    <ItemImages product={product} main_color={main_color} language={language} />
 
                     {/* 🟢 Product Details + Form */}
                     <div className="flex flex-col space-y-6">
@@ -266,7 +314,6 @@ export default function ProductPage() {
                                 <h3 className="text-sm font-medium text-gray-900">
                                     {t.color}: <span className="font-semibold">{selectedColor}</span>
                                 </h3>
-
                                 <div className="flex gap-3 mt-3">
                                     {colorOptions.map((c) => (
                                         <button
@@ -291,7 +338,6 @@ export default function ProductPage() {
                                 <h3 className="text-sm font-medium text-gray-900">
                                     {t.size}: <span className="font-semibold">{selectedSize}</span>
                                 </h3>
-
                                 <div className="flex gap-3 mt-3">
                                     {sizeOptions.map((s) => (
                                         <button
@@ -422,20 +468,84 @@ export default function ProductPage() {
                                     </div>
                                 </div>
 
+                                {/* 🟢 OFFERS LIST */}
+                                {offers.length > 0 && (
+                                    <div className="grid gap-3 mt-4">
+                                        {offers.map((offer) => {
+                                            // Don't show invalid quantities
+                                            if (Number(offer.Quantity) < 1) return null;
+
+                                            // Check if this offer is active
+                                            const isActive = selectedOffer?.id === offer.id;
+
+                                            return (
+                                                <div
+                                                    key={offer.id || Math.random()}
+                                                    onClick={() => selectOffer(offer)}
+                                                    className={`cursor-pointer relative overflow-hidden rounded-xl border p-4 transition-all hover:shadow-md ${isActive ? 'bg-amber-50 border-2' : 'bg-white border-gray-200'}`}
+                                                    style={{ borderColor: isActive ? main_color : '#E5E7EB' }}
+                                                >
+                                                    {isActive && (
+                                                        <div className={`absolute top-0 ${isAr ? 'left-0' : 'right-0'} bg-green-500 text-white p-1 rounded-bl-lg z-10`}>
+                                                            <CheckCircle2 size={16} />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`p-3 rounded-full flex-shrink-0 ${isActive ? 'bg-white' : 'bg-gray-100'}`}>
+                                                            {Number(offer.Quantity) >= 3 ? (
+                                                                <Gift size={24} style={{ color: main_color }} />
+                                                            ) : (
+                                                                <Tag size={24} style={{ color: main_color }} />
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <h3 className="font-bold text-gray-900">
+                                                                    {offer.name || t.specialOfferTitle}
+                                                                </h3>
+                                                                {isActive && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">{t.bestValue}</span>}
+                                                            </div>
+
+                                                            <p className="text-sm text-gray-600 mt-1">
+                                                                {t.buy} <span className="font-bold">{offer.Quantity}</span> {t.for} <span className="font-bold text-lg" style={{ color: main_color }}>{Number(offer.price).toLocaleString()} {t.currency}</span>
+                                                            </p>
+
+                                                            {offer.freedelevry && (
+                                                                <p className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                                                                    <CheckCircle2 size={12} /> {t.freeShipping}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+
                                 {/* Price Summary */}
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-sm text-gray-600">
                                         <span>{t.price}:</span>
                                         <span className="font-medium">
-                                            {t.currency} {(formData.quantity * product.price).toLocaleString()}
+                                            {t.currency} {(selectedOffer ? Number(selectedOffer.price) : formData.quantity * product.price).toLocaleString()}
                                         </span>
                                     </div>
 
                                     <div className="flex justify-between text-sm text-gray-600">
                                         <span>{t.delivery}:</span>
-                                        <span className="font-medium">
-                                            {t.currency} {deliveryCost.toLocaleString()}
-                                        </span>
+                                        <div>
+                                            <span className={`font-medium ${formData.freeDelivery ? 'line-through text-red-500 mx-1' : ''}`}>
+                                                {t.currency} {deliveryCost.toLocaleString()}
+                                            </span>
+                                            {formData.freeDelivery && (
+                                                <span className="text-green-600 font-medium">
+                                                    {isAr ? 'توصيل مجاني' : 'Livraison Gratuite'}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="flex justify-between text-lg font-semibold">

@@ -53,7 +53,7 @@ const Header = () => {
     return (
         <header
             style={headerStyle}
-            className="bg-white shadow-sm sticky top-0 z-50"
+            className="bg-white shadow-sm  top-0 z-50"
         >
             <div className="mx-auto px-4 py-1 flex items-center justify-between">
                 <Link to={'/'} className='flex items-center'>

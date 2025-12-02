@@ -3,9 +3,10 @@ import Header from "./components/Header";
 import { useEffect, useRef } from "react";
 import getData from "./getData"; // هذا object وليس function
 import ReactPixel from "react-facebook-pixel";
+import { initTikTokPixel } from "./utility/tiktokPixel";
 
 function App() {
-  const { facebookPixel, store_name, logo, language } = getData; // ← كما هي لأن getData ليست function
+  const { facebookPixel, store_name, logo, language, TiktokPixel } = getData; // ← كما هي لأن getData ليست function
 
   const pixelInitialized = useRef(false);
 
@@ -28,7 +29,9 @@ function App() {
     if (logo) {
       changeFavicon(logo);
     }
-
+    if (TiktokPixel?.id) {
+      initTikTokPixel(TiktokPixel.id);
+    }
     // تفعيل Facebook Pixel مرة واحدة
     if (facebookPixel?.id && !pixelInitialized.current) {
       ReactPixel.init(facebookPixel.id, {}, { debug: false });
